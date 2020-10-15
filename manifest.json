@@ -1,0 +1,25 @@
+{
+  "manifest_version": 2,
+  "name": "Track Me No More",
+  "version": "0.1",
+
+  "description": "Block trackers and others element of the internet that vulnerate your privacy",
+  "homepage_url": "https://github.com/trahvex/TrackMeNoMore",
+
+  "permissions": ["webRequest","webRequestBlocking","<all_urls>","activeTab"],
+
+  "icons": {
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png"
+  },
+
+  "browser_action": {
+      "default_icon": "icons/icon48.png",
+     "default_popup": "extension_popup.html"
+ },
+
+
+   "background": {
+        "scripts": ["background.js"]
+    }
+}

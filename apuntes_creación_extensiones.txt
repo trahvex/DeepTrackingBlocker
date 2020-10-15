@@ -1,0 +1,35 @@
+1.  The first three keys: manifest_version, name, and version, are mandatory and contain basic metadata for the extension.
+
+    description is optional, but recommended: it's displayed in the Add-ons Manager.
+
+    icons is optional, but recommended: it allows you to specify an icon for the extension, that will be shown in the Add-ons Manager.
+
+2.  content_scripts, which tells Firefox to load a script into Web pages whose URL matches a specific pattern
+
+3.  browser_action specifies the toolbar button. We're supplying three pieces of information here:
+      default_icon is mandatory, and points to the icon for the button
+      default_title is optional, and will be shown in a tooltip
+      default_popup is used if you want a popup to be shown when the user clicks the button. Uses an html file
+
+
+4.  permissions lists permissions the extension needs
+
+5.  web_accessible_resources lists files that we want to make accessible to web pages
+
+With this then we need: an html for the content, a .css for the style and a .js that states what happen when the user clicks the image (extension2), these files are included as it if was a web page
+
+*Las imagenes jpeg no las pilla bien -> usar png
+*Hay que tener cuidado con los simbolos y las barras
+
+
+OVERVIEW DE LA EXPLICACION DE CHROME
+
+- https://developer.chrome.com/extensions/browserAction#method-setBadgeText esto te permite añadir u hasta 4 caracteres en una pequeña medalla en el icono
+
+- en la documenracion de mozilla casi hay mas cosas eh
+
+- cuando se menciona callback quiere decir que cuando se realize una funcion, la de callback estara esperando a que se obtengan los resultados para ser realizada
+
+- como usamos webRequest, necesitamos que el background sea definido como persistent en el manifestjson
+
+- badgetext update by tab https://stackoverflow.com/questions/32168449/how-can-i-get-different-badge-value-for-every-tab-on-chrome/32168534
