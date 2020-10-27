@@ -1,4 +1,4 @@
-NEXT STEP: crear extension que me recoja todas las url en el codigo -> me vendria bien ver como lo hacen en el TrackSign // INSPECCIONAR COMO LO HACE uBlock
+NEXT STEP: crear extension que me recoja todas las url en el codigo
 
 
 Que tiene que hacer?
@@ -6,18 +6,6 @@ Que tiene que hacer?
 
 
 PREGUNTAS REUNION
-3. Preguntar si le mando los entregables de gep tambien al profe
-
-4. para que me quede claro, como puedo ejecutar esto pa obtener los pesos buenos
-https://mil-tokyo.github.io/webdnn/docs/tutorial/keras.html
-
-7. perdirle al archivo h5 con los pesos para usar el mismo?
-
-6. entonces el modelo ese se uso en el tracksign?
-
-8. Crees que es buena idea presentar una lista de url al usuario bloqeuado? se puede poner como una opcion de configuracion para aquellos que le interese
-
-
 
 
 UTILIZAR TENSORFLOW.js o WEBDNN
@@ -29,9 +17,6 @@ el TENSORFLOW deberia tirar de grafica para un buen rendimiento, tanto integrada
 
 la cosa es que el webDNN en general parece un poco mas rapido, porque si el retraso esta en la carga del model y la carga se puede hacer al iniciar el navegador, el recorte
 de tiempo de las tareas de inferencia, que es lo que nos interesa pues resulta rentable quizas
-
-
-Siguiente reunión
 
 
 ADVANTGE

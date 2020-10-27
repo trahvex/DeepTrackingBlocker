@@ -1,5 +1,6 @@
 //Javascript que va detras del manifestjson
 
+
 // esta funcion se ejecuta al ser instalado
 chrome.runtime.onInstalled.addListener(
 
@@ -13,9 +14,6 @@ chrome.runtime.onStartup.addListener(
 
 
 
-
-
-
     }
 );
 
@@ -24,9 +22,30 @@ chrome.browserAction.setBadgeBackgroundColor({color:'#FF5733'});
 
 
 
+
+
+
+
+
+
 // Here we will save tabId, tab url, number of blocked url and its lists
 var tabsInfo = new Map();
+var dict;
 
+//load dictionary for preprocessing
+jQuery.getJSON("dict_url_raw.json", function(json) {
+
+    dict = json
+
+    //al caracter que tiene el 0 asignado como traduccion se lo cambiamos para que no interfiera con el padding, se le da el valor de dict.length que es el immediatamente mas peque siguiente
+    for (var key in dict) {
+        if (dict.hasOwnProperty(key) && dict[key] == 0) {
+            dict[key] = Object.keys(dict).length;
+        }
+    }
+});
+
+//function to create a new entry for tabsInfo
 function newInfo (tabId){
     chrome.tabs.get(tabId,
         function(tab) {
@@ -43,18 +62,34 @@ function newInfo (tabId){
 
 // ############################################## REQUEST PROCESSING ##############################################
 
-//este script deberia escuchar peticiones http y analizarlas
 chrome.webRequest.onBeforeRequest.addListener(
     function(details){ //this is a callback function executed when details of the webrequest are available
         const request_url = details.url;
         const idTab = details.tabId;
 
-        if(!tabsInfo.has(idTab)){
+        if(idTab >= 0 && !tabsInfo.has(idTab)){
             newInfo(idTab);
         }
 
+
         let suspicious = false;
-        //aqui se pasa el filtro supongamos (incluir preprocessing), if url is suspicious return suspicious = true;
+
+
+        //######################### URL PREPROCESSING #########################
+
+        //convertimos la url de string a array de caracteres
+        const url_array = Array.from(request_url);
+
+        //traducimos la url de caracteres a numeros segun el diccionario creado por la notebook del theo (esta depende de la base de datos que utiliza para el training)
+        for (i=0; i < url_array.length; i++){
+            if(dict.hasOwnProperty(url_array[i]))
+                url_array[i]=dict[url_array[i]];
+        }
+
+        //padding a la izquierda
+        padded_url_array = Array(200).fill('0').concat(url_array).slice(url_array.length);
+
+        //######################### INFERENCE TASK #########################
 
 
 
@@ -62,9 +97,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 
 
-
-
-        if (suspicious || request_url == 'https://dpz3v.aoscdn.com/web/webbuild/img/bg.a8a2.jpg') {
+        if (suspicious) {
             chrome.tabs.get(idTab,
                 function(tab) {
                     chrome.browserAction.setBadgeText(
@@ -89,11 +122,9 @@ chrome.webRequest.onBeforeRequest.addListener(
 //on activated tab, creates new tabInfo if tab visited is not registered
 chrome.tabs.onActivated.addListener(
     function(activeInfo){
-
         if(tabsInfo.has(activeInfo.tabId)){
             return;
         }
-
         newInfo(activeInfo.tabId);
     }
 );
@@ -118,6 +149,7 @@ chrome.tabs.onRemoved.addListener(
         if(!tabsInfo.has(tabId)){
             return;
         }
+        //console.log(tabsInfo);
         tabsInfo.delete(tabId);
     }
 )

@@ -33,3 +33,12 @@ OVERVIEW DE LA EXPLICACION DE CHROME
 - como usamos webRequest, necesitamos que el background sea definido como persistent en el manifestjson
 
 - badgetext update by tab https://stackoverflow.com/questions/32168449/how-can-i-get-different-badge-value-for-every-tab-on-chrome/32168534
+
+
+
+
+#################################################################### INFO DEL PROCESO ####################################################################
+
+1. Ayer estuve ejecutando la notebook, una vez tenia todos los paquetes que tocaban y ejecute los bloques siguiendo las instrucciones del autor, fue todo correcto y obtuve un modelo con la misma precision que la mencionada en el documento
+2. Toca configurar webdnn, pide python 3.6.x
+3. El preprocessing tengo que mirar como usa el diccionario de json para traducir cada caracter de la array a un numero, todo esto lo pide el modelo como preprocessing
