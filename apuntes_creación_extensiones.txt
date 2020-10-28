@@ -42,3 +42,11 @@ OVERVIEW DE LA EXPLICACION DE CHROME
 1. Ayer estuve ejecutando la notebook, una vez tenia todos los paquetes que tocaban y ejecute los bloques siguiendo las instrucciones del autor, fue todo correcto y obtuve un modelo con la misma precision que la mencionada en el documento
 2. Toca configurar webdnn, pide python 3.6.x
 3. El preprocessing tengo que mirar como usa el diccionario de json para traducir cada caracter de la array a un numero, todo esto lo pide el modelo como preprocessing
+
+el problema con el webdnn es que solo soporta tensoflow 1.2 hasta 1.4, theo usa 2.1 xd
+
+################################## Evaluated JavaScript ################################
+The policy against eval() and its relatives like setTimeout(String), setInterval(String), and new Function(String) can be relaxed by adding 'unsafe-eval' to your policy:
+
+"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+However, we strongly recommend against doing this. These functions are notorious XSS attack vectors.
