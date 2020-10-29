@@ -1,5 +1,22 @@
+<!DOCTYPE html>
 <html>
+  <head>
+      <script src="extension_popup.js"></script>
+      <link rel="stylesheet" href="extension_styles.css">
+      <title>Track Me No More</title>
+  </head>
   <body>
-    <h1>eh que pasa</h1>
+        <img src="icons/icon96.png" alt="iconoextension" width="150" height="150">
+        <h1> Track Me No More </h1>
+
+        <form id="activateForm">
+            <input type="checkbox" id="activation" name="activation" value="activated">
+            <label for="activation"> Activate/Deactivate extension </label><br>
+        </form>
+
+        <h3> Blocked urls: </h3>
+        <ul id="lista_blocked_urls">
+        </ul>
+
   </body>
 </html>
