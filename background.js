@@ -1,23 +1,53 @@
 //Javascript que va detras del manifestjson
 //############################################## GLOBAL VARIABLES ##############################################
+
+var filter = true;
+
 var model;
 var dict;
 // Here we will save tabId, tab url, number of blocked url and its lists
 var tabsInfo = new Map();
+
+var user_allowed_urls = new Set();
+var user_allowed_hosts = new Set();
+
 loadModel();
 load_dict();
+
+
+
+function isURL(str) {
+  const pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+  return !!pattern.test(str);
+}
+
 
 //function to create a new entry for tabsInfo
 function newInfo (tabId){
     chrome.tabs.get(tabId,
         function(tab) {
-            let info = [
-                tabId,
-                tab.url,
-                0,
-                []
-            ];
-            tabsInfo.set(tabId,info);
+            let aux_url, auxhost;
+            if(isURL(tab.url)){
+                aux_url = new URL(tab.url);
+                aux_host = aux_url.host;
+
+                let info = {
+                    id: tabId,
+                    url: tab.url,
+                    blocked_index: [],
+                    blocked: [],
+                    host: aux_host
+                };
+                tabsInfo.set(tabId,info);
+            }
+            else {
+                console.log("error", tab.url);
+            }
         }
     );
 }
@@ -48,9 +78,9 @@ chrome.runtime.onStartup.addListener(
 
 // ############################################## FUNCIONES PARA EL MODELO ##############################################
 
-//Load DNN model
+//Load model
 async function loadModel(){
-    model = await tf.loadLayersModel('./model_tfjs/model.json');
+    model = await tf.loadLayersModel('./model_tfjs-CNN/model.json');
     //model.summary();
 }
 
@@ -93,13 +123,22 @@ function processResult(prepro_url){
     return result.arraySync(); //Returns the tensor data as a nested array, as it is one value, it returns one int
 }
 
-function updateTabInfo (idTab, request_url){
+
+
+function updateTabInfo (idTab, aux_URL){
     chrome.tabs.get(idTab,
         function(tab) {
+            check_value = user_allowed_urls.has(aux_URL.href);
+            let blocked_info = {
+                url: aux_URL.href,
+                host: aux_URL.host,
+                check: check_value,
+            }
+            tabsInfo.get(idTab).blocked_index.push(aux_URL.href);
+            tabsInfo.get(idTab).blocked.push(blocked_info);
             chrome.browserAction.setBadgeText(
-                {tabId: idTab, text: ((++tabsInfo.get(idTab)[2]).toString())}
+                {tabId: idTab, text: ((tabsInfo.get(idTab).blocked.length).toString())}
             );
-            tabsInfo.get(idTab)[3].push(request_url);
         }
     );
 }
@@ -110,6 +149,11 @@ function updateTabInfo (idTab, request_url){
 chrome.webRequest.onBeforeRequest.addListener(
     function(details){ //this is a callback function executed when details of the webrequest are available
 
+        //check if extension is deactivated
+        if(!filter){
+            return;
+        }
+
         const request_url = details.url;
         const idTab = details.tabId;
 
@@ -117,21 +161,29 @@ chrome.webRequest.onBeforeRequest.addListener(
             newInfo(idTab);
         }
 
+        //allow requests that have same host or are present in excepcions list
+        let aux_url = new URL(request_url);
+        if(tabsInfo.has(idTab)){
+            if(aux_url.host == tabsInfo.get(idTab).host){
+                //console.log(request_url, " and ", tabsInfo.get(idTab).url, " have same host, allowed connection" );
+                return;
+            }
+        }
 
         let suspicious = 0;
-
         let prepro_url = url_preprocessing(request_url);
-
-
         if(model != undefined) {
             suspicious = processResult(prepro_url);
         }
 
-        console.log("URL:", request_url, " y es:", suspicious);
-
         //if it is classified as tracking, is added to tab info
-        if (suspicious && tabsInfo.has(idTab)) {
-            updateTabInfo(idTab,request_url);
+        if (suspicious && tabsInfo.has(idTab)){
+            //console.log("Classified as suspicous", request_url, aux_url.host, " Web host:", tabsInfo.get(idTab).host);
+            updateTabInfo(idTab,aux_url);
+            if (user_allowed_urls.has(request_url)) {
+                console.log("Allowed by excepcions list: ", request_url);
+                return;
+            }
             return {cancel: true};
         };
     },
@@ -142,7 +194,7 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 
 // ############################################## TABS LISTENERS ##############################################
-
+var current_tab;
 //on activated tab, creates new tabInfo if tab visited is not registered
 chrome.tabs.onActivated.addListener(
     function(activeInfo){
@@ -151,17 +203,15 @@ chrome.tabs.onActivated.addListener(
             return;
         }
         newInfo(activeInfo.tabId);
+        console.log(tabsInfo);
     }
 );
 
-
-var current_tab;
 
 //on updated tab, creates new tabInfo when page is reloaded or url is changed
 chrome.tabs.onUpdated.addListener(
     function(tabId, changeInfo){
         if(changeInfo.status == "loading" && tabsInfo.has(tabId)){
-            current_tab = tabId;
             newInfo(tabId);
         }
         else{
@@ -185,11 +235,39 @@ chrome.tabs.onRemoved.addListener(
 
 
 // ############################################## CONNECTIONS WITH POPUP ##############################################
-
-chrome.extension.onConnect.addListener(function(port) {
-     console.log("Connected .....");
-     port.onMessage.addListener(function(msg,sender) {
-         console.log("message recieved: " + msg, tabsInfo.get(current_tab)[3]);
-         port.postMessage(tabsInfo.get(current_tab)[3]);
-     });
-})
+chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+	switch (request.method)
+	{
+    case 'filterOn':
+        filter = true;
+        break;
+    case 'filterOff':
+        filter = false;
+        break;
+    case 'add_exception':
+        user_allowed_urls.add(request.data);
+        console.log("message received ", request.data);
+        if(tabsInfo.has(current_tab)){
+            let i = tabsInfo.get(current_tab).blocked_index.indexOf(request.data);
+            tabsInfo.get(current_tab).blocked[i].check =true;
+        }
+        break;
+    case 'delete_exception':
+        if(user_allowed_urls.has(request.data)){
+            user_allowed_urls.delete(request.data);
+            if(tabsInfo.has(current_tab)){
+                let i = tabsInfo.get(current_tab).blocked_index.indexOf(request.data);
+                tabsInfo.get(current_tab).blocked[i].check =false;
+            }
+        }
+    case 'get_blocked_urls':
+        if(tabsInfo.has(current_tab)){
+            console.log("Request received, sending data...", tabsInfo.get(current_tab).blocked, "user_allowed_urls ", user_allowed_urls);
+            sendResponse(tabsInfo.get(current_tab).blocked);
+        }
+        else {
+            sendResponse()
+        }
+        break;
+	}
+});
