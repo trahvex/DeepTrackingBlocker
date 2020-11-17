@@ -80,7 +80,7 @@ chrome.runtime.onStartup.addListener(
 
 //Load model
 async function loadModel(){
-    model = await tf.loadLayersModel('./model_tfjs-CNN/model.json');
+    model = await tf.loadLayersModel('./model_tfjs-DNN/model.json');
     //model.summary();
 }
 
@@ -128,7 +128,13 @@ function processResult(prepro_url){
 function updateTabInfo (idTab, aux_URL){
     chrome.tabs.get(idTab,
         function(tab) {
-            check_value = user_allowed_urls.has(aux_URL.href);
+            let check_value;
+            if(user_allowed_hosts.has(aux_URL.host)){
+                check_value = true;
+            }
+            else{
+                check_value = user_allowed_urls.has(aux_URL.href);
+            }
             let blocked_info = {
                 url: aux_URL.href,
                 host: aux_URL.host,
@@ -148,8 +154,7 @@ function updateTabInfo (idTab, aux_URL){
 // ############################################## REQUEST PROCESSING ##############################################
 chrome.webRequest.onBeforeRequest.addListener(
     function(details){ //this is a callback function executed when details of the webrequest are available
-
-        //check if extension is deactivated
+        //check if extension is enabled
         if(!filter){
             return;
         }
@@ -179,9 +184,10 @@ chrome.webRequest.onBeforeRequest.addListener(
         //if it is classified as tracking, is added to tab info
         if (suspicious && tabsInfo.has(idTab)){
             //console.log("Classified as suspicous", request_url, aux_url.host, " Web host:", tabsInfo.get(idTab).host);
+            //console.log(aux_url);
             updateTabInfo(idTab,aux_url);
-            if (user_allowed_urls.has(request_url)) {
-                console.log("Allowed by excepcions list: ", request_url);
+            if (user_allowed_hosts.has(aux_url.host) || user_allowed_urls.has(request_url)) {
+                //console.log("Allowed by excepcions list: ", request_url);
                 return;
             }
             return {cancel: true};
@@ -238,13 +244,15 @@ chrome.tabs.onRemoved.addListener(
 chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 	switch (request.method)
 	{
-    case 'filterOn':
-        filter = true;
+    case 'get_enabled':
+        sendResponse(filter);
         break;
-    case 'filterOff':
-        filter = false;
+    case 'filterCheck':
+        filter = request.data;
         break;
-    case 'add_exception':
+
+    // URL excepction management
+    case 'add_url_exception':
         user_allowed_urls.add(request.data);
         console.log("message received ", request.data);
         if(tabsInfo.has(current_tab)){
@@ -252,7 +260,7 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
             tabsInfo.get(current_tab).blocked[i].check =true;
         }
         break;
-    case 'delete_exception':
+    case 'delete_url_exception':
         if(user_allowed_urls.has(request.data)){
             user_allowed_urls.delete(request.data);
             if(tabsInfo.has(current_tab)){
@@ -260,13 +268,29 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
                 tabsInfo.get(current_tab).blocked[i].check =false;
             }
         }
+        break;
+
+    // host excepction managemen
+        case 'add_host_exception':
+            user_allowed_hosts.add(request.data);
+            console.log("message received ", request.data);
+            break;
+        case 'delete_host_exception':
+            if(user_allowed_hosts.has(request.data)){
+                user_allowed_hosts.delete(request.data);
+            }
+            break;
+
+    case 'get_allowed_hosts':
+        sendResponse(Array.from(user_allowed_hosts));
+        break;
     case 'get_blocked_urls':
         if(tabsInfo.has(current_tab)){
-            console.log("Request received, sending data...", tabsInfo.get(current_tab).blocked, "user_allowed_urls ", user_allowed_urls);
+            //console.log("Request received, sending data...", tabsInfo.get(current_tab).blocked, "user_allowed_urls ", user_allowed_urls);
             sendResponse(tabsInfo.get(current_tab).blocked);
         }
         else {
-            sendResponse()
+            sendResponse();
         }
         break;
 	}
