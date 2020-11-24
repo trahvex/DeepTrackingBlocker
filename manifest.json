@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "name": "Track Me No More",
-  "version": "0.5",
+  "name": "Deep Tracking Blocker",
+  "version": "0.6",
 
   "description": "Block trackers and others element of the internet that vulnerate your privacy",
   "homepage_url": "https://github.com/trahvex/TrackMeNoMore",
