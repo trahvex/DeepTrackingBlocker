@@ -1,21 +1,46 @@
 function create_host_section(host){
-    let div = document.createElement("div");
-    div.id = host;
 
+
+    let hostdiv = document.createElement("div");
+    hostdiv.id = host+"header";
     let sectionTitle = document.createElement("h3");
+    sectionTitle.id = host+"title";
     sectionTitle.appendChild(document.createTextNode("Host: " + host));
-    div.appendChild(sectionTitle);
+
 
     let label_host = document.createElement("label");
     let checkbox_host = document.createElement("input");
     checkbox_host.type = "checkbox";    // make the element a checkbox
-    checkbox_host.id = host+"checkbox";
+    checkbox_host.id = host + "checkbox";
     checkbox_host.name = host + "checkbox";      // give it a name we can check on the server side
     checkbox_host.value = host;
     label_host.appendChild(checkbox_host);   // add the box to the element
     sectionTitle.appendChild(label_host);
 
-    document.getElementById('blocked_urls').appendChild(div);
+    //in the title we have the host name + the checkbox, we want to add a hide button for the urls
+    let contentdiv = document.createElement("div");
+    contentdiv.id = host;
+    contentdiv.style.display = "none";
+
+    hostdiv.appendChild(sectionTitle);
+    hostdiv.appendChild(contentdiv);
+
+    let hideButton = document.createElement("input");
+    hideButton.type = "button";
+    hideButton.value = "v";
+    hideButton.onclick = function(){
+        if(document.getElementById(host).style.display == "none"){
+            document.getElementById(host).style.display = "block";
+        }
+        else {
+            document.getElementById(host).style.display = "none";
+        }
+    };
+
+    sectionTitle.appendChild(hideButton);
+
+    document.getElementById('blocked_urls').appendChild(hostdiv);
+
 
     checkbox_host.addEventListener( 'change', function() {
     if(this.checked) {
@@ -116,9 +141,4 @@ document.addEventListener('DOMContentLoaded', function () {
 	get_blocked_urls();
 
     get_allowed_hosts();
-
-	// Attach onclick event to button
-	//$("#add-ten-to-ticker").click( function() {
-	//	localTicker.addToTicker(10);
-	//});
 });
