@@ -121,7 +121,7 @@ function checkEnabled(){
         onoffButton.checked = response;
     });
 
-    onoffButton.addEventListener( 'change', function() {
+    onoffButton.addEventListener('change', function() {
         chrome.extension.sendRequest({method: 'filterCheck', data: onoffButton.checked}, function(response) {});
     });
 };
