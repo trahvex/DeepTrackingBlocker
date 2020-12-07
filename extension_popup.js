@@ -44,9 +44,9 @@ function create_host_section(host){
 
     checkbox_host.addEventListener( 'change', function() {
     if(this.checked) {
-        chrome.extension.sendRequest({method: 'add_host_exception', data: checkbox_host.value}, function(response) {});
+        chrome.extension.sendMessage({method: 'add_host_exception', data: checkbox_host.value}, function(response) {});
     } else {
-        chrome.extension.sendRequest({method: 'delete_host_exception', data: checkbox_host.value}, function(response) {});
+        chrome.extension.sendMessage({method: 'delete_host_exception', data: checkbox_host.value}, function(response) {});
         };
     });
 }
@@ -72,15 +72,15 @@ function createURLCheckbox(item){
 
     checkbox.addEventListener( 'change', function() {
     if(this.checked) {
-        chrome.extension.sendRequest({method: 'add_url_exception', data: checkbox.value}, function(response) {});
+        chrome.extension.sendMessage({method: 'add_url_exception', data: checkbox.value}, function(response) {});
     } else {
-        chrome.extension.sendRequest({method: 'delete_url_exception', data: checkbox.value}, function(response) {});
+        chrome.extension.sendMessage({method: 'delete_url_exception', data: checkbox.value}, function(response) {});
     }
 });
 };
 
 function get_allowed_hosts(){
-    chrome.extension.sendRequest({method: 'get_allowed_hosts'}, function(response) {
+    chrome.extension.sendMessage({method: 'get_allowed_hosts'}, function(response) {
         //alert(JSON.stringify(response));
         if(response && response.length > 0){
             for (let i in response){
@@ -95,7 +95,7 @@ function get_allowed_hosts(){
 
 
 function get_blocked_urls(){
-    chrome.extension.sendRequest({method: 'get_blocked_urls'}, function(response) {
+    chrome.extension.sendMessage({method: 'get_blocked_urls'}, function(response) {
         //alert(JSON.stringify(response));
         if(response && response.length > 0){
             let host_array = [];
@@ -117,24 +117,24 @@ function get_blocked_urls(){
 function checkEnabled(){
     onoffButton = document.getElementById('onoffButton');
 
-    chrome.extension.sendRequest({method:'get_enabled'}, function(response){
+    chrome.extension.sendMessage({method:'get_enabled'}, function(response){
         onoffButton.checked = response;
     });
 
     onoffButton.addEventListener('change', function() {
-        chrome.extension.sendRequest({method: 'filterCheck', data: onoffButton.checked}, function(response) {});
+        chrome.extension.sendMessage({method: 'filterCheck', data: onoffButton.checked}, function(response) {});
     });
 };
 
 function checkSave_allowed(){
     saveButton = document.getElementById('saveButton');
 
-    chrome.extension.sendRequest({method:'get_enabled_SA'}, function(response){
+    chrome.extension.sendMessage({method:'get_enabled_SA'}, function(response){
         saveButton.checked = response;
     });
 
     saveButton.addEventListener('change', function() {
-        chrome.extension.sendRequest({method: 'save_allowed_changed', data: saveButton.checked}, function(response) {});
+        chrome.extension.sendMessage({method: 'save_allowed_changed', data: saveButton.checked}, function(response) {});
     });
 };
 

@@ -308,7 +308,7 @@ chrome.windows.onRemoved.addListener(function (windowid){
 
 
 // ############################################## CONNECTIONS WITH POPUP ##############################################
-chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
+chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 	switch (request.method)
 	{
     case 'get_enabled':
