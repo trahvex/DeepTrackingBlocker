@@ -126,19 +126,30 @@ function checkEnabled(){
     });
 };
 
-// Add listener to receive messages from background page
-//chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-//	switch (request.method)
-//	{
-//	}
-//});
+function checkSave_allowed(){
+    saveButton = document.getElementById('saveButton');
+
+    chrome.extension.sendRequest({method:'get_enabled_SA'}, function(response){
+        saveButton.checked = response;
+    });
+
+    saveButton.addEventListener('change', function() {
+        chrome.extension.sendRequest({method: 'save_allowed_changed', data: saveButton.checked}, function(response) {});
+    });
+};
+
+
 
 // Run our script as soon as the document's DOM is ready.
 document.addEventListener('DOMContentLoaded', function () {
 
     checkEnabled();
 
+    checkSave_allowed();
+
 	get_blocked_urls();
 
     get_allowed_hosts();
+
+
 });

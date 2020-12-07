@@ -4,6 +4,9 @@
 //Boolean that indicates if extension's filter is activated or not
 var filter = true;
 
+//Boolean to check is allowed sites should be saved between sessions
+var save_allowed = true;
+
 //Variables needed for the deep learning model to work
 var model;
 var dict;
@@ -70,11 +73,13 @@ chrome.runtime.onStartup.addListener(
         loadWL();
 
         chrome.storage.sync.get(['allowed_urls'], function(result){
-            user_allowed_urls = result.value;
+            result.allowed_urls.forEach(item => user_allowed_urls.add(item));
+            console.log("URLs recovered from memory: ", result.allowed_urls, user_allowed_urls);
         });
 
         chrome.storage.sync.get(['allowed_hosts'], function(result){
-            user_allowed_hosts = result.value;;
+            result.allowed_hosts.forEach(item => user_allowed_hosts.add(item));
+            console.log("Hosts recovered from memory: ", result.allowed_hosts, user_allowed_hosts);
         });
     }
 );
@@ -287,15 +292,18 @@ chrome.tabs.onRemoved.addListener(
 
 //it save the allowed sites in storage when a window is closed
 chrome.windows.onRemoved.addListener(function (windowid){
+    if (save_allowed) {
+        let arrayURLs = Array.from(user_allowed_urls.values());
+        let arrayHosts = Array.from(user_allowed_hosts.values());
 
-    chrome.storage.sync.set({'allowed_urls': user_allowed_urls}, function(){
-        console.log('URLs saved succesfully: ',user_allowed_urls );
-    });
+        chrome.storage.sync.set({ ['allowed_urls'] : arrayURLs }, function(){
+            console.log('URLs saved succesfully: ', arrayURLs);
+        });
 
-    chrome.storage.sync.set({'allowed_hosts': user_allowed_hosts}, function(){
-        console.log('Hosts saved succesfully', user_allowed_hosts);
-    });
-
+        chrome.storage.sync.set({ ['allowed_hosts'] : arrayHosts }, function(){
+            console.log('Hosts saved succesfully', arrayHosts);
+        });
+    }
 });
 
 
@@ -310,10 +318,17 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
         filter = request.data;
         break;
 
+    case 'get_enabled_SA':
+        sendResponse(save_allowed);
+        break;
+    case 'save_allowed_changed':
+        save_allowed = request.data;
+        break;
+
     // URL excepction management
     case 'add_url_exception':
         user_allowed_urls.add(request.data);
-        console.log("message received ", request.data);
+        //console.log("message received ", request.data);
         if(tabsInfo.has(current_tab)){
             let i = tabsInfo.get(current_tab).blocked_index.indexOf(request.data);
             tabsInfo.get(current_tab).blocked[i].check =true;
@@ -331,7 +346,7 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
     // host excepction management
         case 'add_host_exception':
             user_allowed_hosts.add(request.data);
-            console.log("message received ", request.data);
+            //console.log("message received ", request.data);
             break;
         case 'delete_host_exception':
             if(user_allowed_hosts.has(request.data)){
